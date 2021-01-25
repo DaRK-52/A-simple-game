@@ -8,6 +8,7 @@ from ship import Ship
 from bullet import Bullet
 from alien import Alien
 from game_stats import GameStats
+from button import Button
 
 class AlienInvasion:
     #构造函数
@@ -24,13 +25,12 @@ class AlienInvasion:
         self.bullets=pygame.sprite.Group()
         self.aliens=pygame.sprite.Group()
         self._create_fleet()
-        self.game_active=True
+        self.play_button=Button(self,"Play")
     #游戏运行主函数
     def run_game(self):
         while True:
-
             self._check_events()
-            if self.game_active==True:
+            if self.stats.game_active==True:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
@@ -43,6 +43,9 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type==pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type==pygame.MOUSEBUTTONDOWN:
+                mouse_pos=pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
 
     def _check_keydown_events(self,event):
         if event.key == pygame.K_RIGHT:
@@ -136,7 +139,8 @@ class AlienInvasion:
             self.ship.center_ship()
             sleep(0.5)
         else:
-            self.game_active=False
+            self.stats.game_active=False
+            pygame.mouse.set_visible(True)
 
     def _update_screen(self):
         self.screen.fill(self.settings.bg_color)
@@ -144,7 +148,20 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+        if not self.stats.game_active:
+            self.play_button.draw_button()
         pygame.display.flip()
+
+    def _check_play_button(self,mouse_pos):
+        button_clicked=self.play_button.rect.collidepoint((mouse_pos))
+        if button_clicked and not self.stats.game_active:
+            self.stats.reset_stats()
+            self.stats.game_active=True
+            self.aliens.empty()
+            self.bullets.empty()
+            self._create_fleet()
+            self.ship.center_ship()
+            pygame.mouse.set_visible(False)
 
 if __name__=='__main__':
     ai=AlienInvasion()
